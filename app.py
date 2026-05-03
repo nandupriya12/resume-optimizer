@@ -12,12 +12,17 @@ job_desc = st.text_area("Paste Job Description")
 if file and job_desc:
     resume_text = extract_text(file)
 
-    score, keywords = ats_score(resume_text, job_desc)
-    matched, missing = skill_gap_analysis(resume_text, job_desc)
+    if not resume_text:
+        st.error("Could not read PDF properly")
+        st.stop()
+
+    with st.spinner("Analyzing resume..."):
+        score, keywords = ats_score(resume_text, job_desc)
+        matched, missing = skill_gap_analysis(resume_text, job_desc)
 
     # 🎯 ATS SCORE
     st.subheader(f"ATS Score: {score}%")
-    st.progress(score / 100)
+    st.progress(min(score / 100, 1.0))
 
     if score > 75:
         st.success("Strong match ✅")
@@ -30,15 +35,15 @@ if file and job_desc:
     st.subheader("✅ Matched Keywords")
     if keywords:
         for k in keywords:
-            st.success(k)
+            if len(k) > 2:
+                st.success(k)
     else:
         st.warning("No keywords matched")
 
     # ❌ MISSING SKILLS
     st.subheader("❌ Missing Skills")
     if missing:
-        for m in missing:
-            st.error(m)
+        st.write(", ".join(missing))
     else:
         st.success("No missing skills")
 
@@ -61,6 +66,11 @@ if file and job_desc:
     # 📄 TAILORED RESUME
     st.subheader("📄 Tailored Resume")
 
+    if "improved_resume" not in st.session_state:
+        st.session_state.improved_resume = ""
+
     if st.button("Generate Improved Resume"):
-        improved = tailor_resume(resume_text, job_desc, missing)
-        st.text_area("Improved Resume", improved, height=300)
+        st.session_state.improved_resume = tailor_resume(resume_text, job_desc, missing)
+
+    if st.session_state.improved_resume:
+        st.text_area("Improved Resume", st.session_state.improved_resume, height=300)

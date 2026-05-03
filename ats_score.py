@@ -1,6 +1,17 @@
+import re
+
+def clean_words(text):
+    text = text.lower()
+    words = re.findall(r'\b[a-z]+\b', text)  # removes punctuation
+    stopwords = {
+        "and", "or", "the", "is", "a", "an", "to", "of", "in", "for", "on", "with"
+    }
+    return set([word for word in words if word not in stopwords])
+
+
 def ats_score(resume_text, job_desc):
-    resume_words = set(resume_text.lower().split())
-    jd_words = set(job_desc.lower().split())
+    resume_words = clean_words(resume_text)
+    jd_words = clean_words(job_desc)
 
     matched = resume_words.intersection(jd_words)
 
